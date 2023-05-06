@@ -8,15 +8,17 @@ fn main() {
     // let p2p_node = Arc::new(p2p::P2P::new("127.0.0.1".to_string(), 8080));
     let p2p_node = Arc::new(Mutex::new(p2p::P2P::new("127.0.0.1".to_string(), 8080)));
     let server_node = Arc::clone(&p2p_node);
+    let (tx, rx) = flume::unbounded();
+
     thread::spawn(move || {
         let server_node = server_node.lock().unwrap();
         server_node.start_server();
 
     });
+    
 
 
     thread::sleep_ms(100);
-    let p2p_node = p2p_node.lock().unwrap();
 
     println!("Server started on port 8080");
     println!("Sending message");

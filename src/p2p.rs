@@ -5,25 +5,18 @@ use crate::tcp::{MessageType, Message};
 use serde::{Serialize, Deserialize};
 use crate::state::{State, Peer};
 use std::thread;
-use std::sync::mpsc;
 use std::sync::Arc;
-
+use flume::{Sender, Receiver, unbounded};
 #[derive(Debug)]
 pub struct P2P {
     pub state: State,
-    pub mscp_channel: mpsc::Sender<Message>,
-    pub mscp_channel_recv: mpsc::Receiver<Message>,
-
 }
 
 impl P2P {
     pub fn new(ip: String, port: u32) -> P2P
     {
-        let (tx, rx) = mpsc::channel();
         P2P {
             state: State::new(ip.clone(), port),
-            mscp_channel: tx,
-            mscp_channel_recv: rx,
         }
     }
 
@@ -41,8 +34,6 @@ impl P2P {
 
     pub fn add_peer(&mut self, peer: Peer) {
         self.state.add_peer(peer);
-
-        
     }
 
     pub fn get_peers(&self) -> Vec<Peer> {
@@ -75,16 +66,5 @@ impl P2P {
                 println!("Unknown");
             }
         }
-    }
-
-    pub fn handle_msg_loop(&mut self) {
-        let rx = Arc::clone(&self.mscp_channel_recv);
-        let mut p2p = self.clone();
-        thread::spawn(move || {
-            loop {
-                let msg = rx.recv().unwrap();
-                p2p.handle_msg(msg);
-            }
-        });
     }
 }
